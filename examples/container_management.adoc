@@ -1,0 +1,12 @@
+= Container Management Queries
+Useful queries for retrieving information about containers and locations.
+
+Replace "https://archivesspace_base_url/" as appropriate to point to staff or public versions of records in link output columns.
+
+== Queries
+
+[source,sql]
+----
+SELECT *
+FROM top_container
+----

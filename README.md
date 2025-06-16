@@ -1,2 +1,2 @@
-# archivesspace-sql
-A repository to document querying the ArchivesSpace database.
+# ArchivesSpace SQL
+A repository to document querying the ArchivesSpace database. Documenents in **examples** are organized by major record types, with locations and containers combined in container management.

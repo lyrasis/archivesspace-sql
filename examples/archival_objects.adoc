@@ -1,0 +1,14 @@
+= Accession Queries
+Useful queries for retrieving information about accesion records.
+
+Replace "https://archivesspace_base_url/" as appropriate to point to staff or public versions of records in link output columns.
+
+== Queries
+Retrieve all resource records' titles, ArchivesSpace IDs, ArchivesSpace Identifier values, and the count of how many archival objects they are linked to, sorted largest to smallest:
+
+
+[source,sql]
+----
+SELECT title, id, identifier
+FROM accession
+----

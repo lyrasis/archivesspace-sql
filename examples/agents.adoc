@@ -1,0 +1,30 @@
+= Agent Queries
+Useful queries for retrieving information about accesion records.
+
+Replace "https://archivesspace_base_url/" as appropriate to point to staff or public versions of records in link output columns.
+
+== People
+
+[source,sql]
+----
+SELECT *
+FROM agent_person
+----
+
+== Corporate Entities
+
+[source,sql]
+----
+SELECT *
+FROM agent_corporate_entity
+----
+
+== Families
+
+[source,sql]
+----
+SELECT *
+FROM agent_family
+----
+
+== All
