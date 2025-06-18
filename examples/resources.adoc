@@ -9,7 +9,7 @@ Retrieve all resource records' titles, ArchivesSpace IDs, **Identifier** values,
 [source,sql]
 ----
 SELECT 
-    r.title, CONCAT('http://archivesspace_base_url/', r.id) AS link, r.id, r.identifiers,
+    r.title, CONCAT('https://archivesspace_base_url/resources/', r.id) AS link, r.id, r.identifier,
     COUNT(a.root_record_id) AS ao_count
 FROM resource AS r
 LEFT JOIN archival_object AS a
@@ -23,7 +23,7 @@ Retrieve the title, link, ArchivesSpace ID, and **Identifier** value of any reso
 [source,sql]
 ----
 SELECT 
-    r.title,r.id,CONCAT('http://archivesspace_base_url/', r.id) AS link,
+    r.title,r.id,CONCAT('https://archivesspace_base_url/resources/', r.id) AS link,
     r.identifier
 FROM resource AS r
 WHERE r.id NOT IN (

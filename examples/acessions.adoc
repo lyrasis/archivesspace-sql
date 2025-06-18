@@ -1,11 +1,32 @@
 = Accession Queries
-Useful queries for retrieving information about accesion records.
+Useful queries for retrieving information about accession records.
 
 Replace "https://archivesspace_base_url/" as appropriate to point to staff or public versions of records in link output columns.
 
 == Queries
+
+Retrieve ASpace accession ID, **Identifier** value separated by "-", accession title, linked classification term identifier, and classification term for accessions with accession dates between 2022-10-16 and 2024-08-05.
+
 [source,sql]
 ----
-SELECT title, id, identifier
-FROM accession
+SELECT 
+  a.id,
+  CONCAT('https://archivesspace_base_url/accessions/', a.id) AS link,
+  TRIM(BOTH '-' FROM CONCAT_WS('-',
+    NULLIF(JSON_UNQUOTE(JSON_EXTRACT(a.identifier, '$[0]')), 'null'),
+    NULLIF(JSON_UNQUOTE(JSON_EXTRACT(a.identifier, '$[1]')), 'null'),
+    NULLIF(JSON_UNQUOTE(JSON_EXTRACT(a.identifier, '$[2]')), 'null'),
+    NULLIF(JSON_UNQUOTE(JSON_EXTRACT(a.identifier, '$[3]')), 'null')
+  )) AS identifier,
+  a.title, 
+  t.identifier AS classification_term_identifier, 
+  t.title AS classification_term
+FROM accession AS a
+LEFT JOIN classification_rlshp AS c 
+  ON a.id = c.accession_id 
+LEFT JOIN classification_term AS t 
+  ON t.id = c.classification_term_id
+WHERE a.accession_date >= '2022-10-16' 
+  AND a.accession_date <= '2024-08-05'
+ORDER BY a.id;
 ----

@@ -1,5 +1,5 @@
 = Agent Queries
-Useful queries for retrieving information about accesion records.
+Useful queries for retrieving information about agent records.
 
 Replace "https://archivesspace_base_url/" as appropriate to point to staff or public versions of records in link output columns.
 
@@ -28,3 +28,191 @@ FROM agent_family
 ----
 
 == All
+Retrieve the ASpace ID, primary/family name, agent type ('Person', 'Corporate Entity', 'Family'), and link of unpublished creators linked as creators or subjects.
+
+[source,sql]
+----
+SELECT 
+    ap.id, 
+    np.primary_name AS agent_name, 
+    'Person' AS agent_type, 
+    CONCAT('https://archivesspace_base_url/agents/agent_person/', ap.id) AS link 
+FROM agent_person ap 
+JOIN linked_agents_rlshp lar 
+ON ap.id = lar.agent_person_id 
+JOIN name_person np 
+ON ap.id = np.agent_person_id 
+WHERE (lar.role_id = 878 OR lar.role_id = 880) 
+AND ap.publish = 0 
+ 
+UNION 
+ 
+SELECT 
+    af.id, 
+    nf.family_name AS agent_name, 
+    'Family' AS agent_type, 
+    CONCAT('https://archivesspace_base_url/agents/agent_family/', af.id) AS link 
+FROM agent_family af 
+JOIN linked_agents_rlshp lar 
+ON af.id = lar.agent_family_id 
+JOIN name_family nf 
+ON af.id = nf.agent_family_id 
+WHERE (lar.role_id = 878 OR lar.role_id = 880) 
+AND af.publish = 0 
+ 
+UNION 
+ 
+SELECT 
+    ace.id, 
+    nce.primary_name AS agent_name, 
+    'Corporate Entity' AS agent_type, 
+    CONCAT('https://archivesspace_base_url/agents/agent_corporate_entity/', ace.id) AS link
+FROM agent_corporate_entity ace 
+JOIN linked_agents_rlshp lar ON ace.id = lar.agent_corporate_entity_id 
+JOIN name_corporate_entity nce ON ace.id = nce.agent_corporate_entity_id 
+WHERE (lar.role_id = 878 OR lar.role_id = 880) 
+AND ace.publish = 0; 
+----
+
+Retrieve the ASpace ID, primary/family name, agent type ('Person', 'Corporate Entity', 'Family'), and link of unpublished creators linked as creators or subjects.
+
+[source,sql]
+----
+SELECT 
+    ap.id, 
+    np.primary_name AS agent_name, 
+    'Person' AS agent_type, 
+    e.value as source, 
+    ai.authority_id, 
+    CONCAT('https://archivesspace_base_url/agents/agent_person/', ap.id) AS link 
+FROM agent_person ap 
+JOIN name_person np 
+ON ap.id = np.agent_person_id 
+JOIN enumeration_value as e 
+ON np.source_id = e.id 
+LEFT JOIN name_authority_id as ai 
+ON np.id = ai.name_person_id 
+ 
+UNION 
+ 
+SELECT 
+    af.id, 
+    nf.family_name AS agent_name, 
+    'Family' AS agent_type, 
+    e.value as source, 
+    ai.authority_id, 
+    CONCAT('https://archivesspace_base_url/agents/agent_family/', af.id) AS link 
+FROM agent_family af 
+JOIN name_family nf 
+ON af.id = nf.agent_family_id 
+JOIN enumeration_value as e 
+ON nf.source_id = e.id 
+LEFT JOIN name_authority_id as ai 
+ON nf.id = ai.name_family_id 
+ 
+UNION 
+ 
+SELECT 
+    ace.id, 
+    nce.primary_name AS agent_name, 
+    'Corporate Entity' AS agent_type, 
+    e.value as source, 
+    ai.authority_id, 
+    CONCAT('https://archivesspace_base_url/agents/agent_corporate_entity/', ace.id) AS link 
+FROM agent_corporate_entity ace 
+JOIN name_corporate_entity nce  
+ON ace.id = nce.agent_corporate_entity_id 
+JOIN enumeration_value as e 
+ON nce.source_id = e.id 
+LEFT JOIN name_authority_id as ai 
+ON nce.id = ai.name_corporate_entity_id;
+----
+
+Retrieve the agent ASpace ID, primary/family name
+[source,sql]
+----
+-- PERSON
+SELECT 
+    p.id AS agent_id, 
+    'Person' AS agent_type, 
+    np.sort_name AS agent_name, 
+    COUNT(DISTINCT l.accession_id) AS unique_accession_count, 
+    COUNT(DISTINCT l.archival_object_id) AS unique_archival_object_count, 
+    COUNT(DISTINCT l.resource_id) AS unique_resource_count, 
+    COUNT(DISTINCT l.event_id) AS unique_event_count, 
+    CONCAT('https://archivesspace_base_url/agents/agent_person/', p.id) AS link,
+    ai.authority_id,
+    ev.value AS source
+FROM 
+    linked_agents_rlshp AS l 
+JOIN 
+    agent_person AS p ON l.agent_person_id = p.id 
+LEFT JOIN 
+    name_person AS np ON p.id = np.agent_person_id 
+LEFT JOIN 
+    enumeration_value AS ev ON np.source_id = ev.id
+LEFT JOIN 
+    name_authority_id AS ai ON np.id = ai.name_person_id 
+WHERE 
+    l.agent_person_id IS NOT NULL 
+GROUP BY 
+    p.id, np.sort_name, ai.authority_id, ev.value
+
+UNION ALL
+
+-- CORPORATE ENTITY
+SELECT 
+    c.id AS agent_id, 
+    'Corporate Entity' AS agent_type, 
+    nc.sort_name AS agent_name, 
+    COUNT(DISTINCT l.accession_id) AS unique_accession_count, 
+    COUNT(DISTINCT l.archival_object_id) AS unique_archival_object_count, 
+    COUNT(DISTINCT l.resource_id) AS unique_resource_count, 
+    COUNT(DISTINCT l.event_id) AS unique_event_count, 
+    CONCAT('https://archivesspace_base_url/agents/agent_corporate_entity/', c.id) AS link,
+    ai.authority_id,
+    ev.value AS source
+FROM 
+    linked_agents_rlshp AS l 
+JOIN 
+    agent_corporate_entity AS c ON l.agent_corporate_entity_id = c.id 
+LEFT JOIN 
+    name_corporate_entity AS nc ON c.id = nc.agent_corporate_entity_id 
+LEFT JOIN 
+    enumeration_value AS ev ON nc.source_id = ev.id
+LEFT JOIN 
+    name_authority_id AS ai ON nc.id = ai.name_corporate_entity_id 
+WHERE 
+    l.agent_corporate_entity_id IS NOT NULL 
+GROUP BY 
+    c.id, nc.sort_name, ai.authority_id, ev.value
+
+UNION ALL
+
+-- FAMILY
+SELECT 
+    f.id AS agent_id, 
+    'Family' AS agent_type, 
+    nf.sort_name AS agent_name, 
+    COUNT(DISTINCT l.accession_id) AS unique_accession_count, 
+    COUNT(DISTINCT l.archival_object_id) AS unique_archival_object_count, 
+    COUNT(DISTINCT l.resource_id) AS unique_resource_count, 
+    COUNT(DISTINCT l.event_id) AS unique_event_count, 
+    CONCAT('https://archivesspace_base_url/agents/agent_family/', f.id) AS link,
+    ai.authority_id,
+    ev.value AS source
+FROM 
+    linked_agents_rlshp AS l 
+JOIN 
+    agent_family AS f ON l.agent_family_id = f.id 
+LEFT JOIN 
+    name_family AS nf ON f.id = nf.agent_family_id 
+LEFT JOIN 
+    enumeration_value AS ev ON nf.source_id = ev.id
+LEFT JOIN 
+    name_authority_id AS ai ON nf.id = ai.name_family_id 
+WHERE 
+    l.agent_family_id IS NOT NULL 
+GROUP BY 
+    f.id, nf.sort_name, ai.authority_id, ev.value;
+----

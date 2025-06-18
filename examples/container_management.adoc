@@ -5,8 +5,34 @@ Replace "https://archivesspace_base_url/" as appropriate to point to staff or pu
 
 == Queries
 
+Retrieve the indicator, ArchivesSpace top container ID, top container link, barcode, resource record conteined, and locattion title for all boxes in room 4.ABC.
 [source,sql]
 ----
-SELECT *
-FROM top_container
+SELECT DISTINCT 
+  t.indicator, 
+  r.top_container_id, 
+  CONCAT(
+    'https://archivesspace_base_url/top_containers/', 
+    t.id
+  ) AS top_container_link,
+  t.barcode, 
+  rr.title as resource_title, 
+  l.title as location_title 
+FROM instance AS i 
+JOIN sub_container AS s 
+  ON i.id = s.instance_id 
+JOIN archival_object AS a 
+  ON a.id = i.archival_object_id 
+JOIN top_container_link_rlshp AS r 
+  ON s.id = r.sub_container_id 
+JOIN top_container AS t 
+  ON t.id = r.top_container_id 
+LEFT JOIN resource AS rr 
+  ON rr.id = a.root_record_id 
+JOIN top_container_housed_at_rlshp AS tcha 
+  ON tcha.top_container_id = t.id 
+JOIN location AS l 
+  ON l.id = tcha.location_id
+WHERE l.room LIKE '4.ABC' 
+ORDER BY t.indicator;
 ----

@@ -4,11 +4,49 @@ Useful queries for retrieving information about accesion records.
 Replace "https://archivesspace_base_url/" as appropriate to point to staff or public versions of records in link output columns.
 
 == Queries
-Retrieve all resource records' titles, ArchivesSpace IDs, ArchivesSpace Identifier values, and the count of how many archival objects they are linked to, sorted largest to smallest:
-
+Retrieve ASpace resource ID, AO ID, link, resource title, AO title, AO level, AO **Other Level** value, attached top container indicator, top container ASpace ID, top container link, child container indicator, and child container type where AO level = "Other Level".
 
 [source,sql]
 ----
-SELECT title, id, identifier
-FROM accession
+SELECT 
+  a.root_record_id, 
+  i.archival_object_id AS aspace_ao_id, 
+  CONCAT(
+    'https://archivesspace_base_url/resources/', 
+    a.root_record_id, 
+    '#tree::archival_object_', 
+    a.id
+  ) AS link,
+  res.title, 
+  a.display_string AS ao_title, 
+  e.value AS level, 
+  a.other_level,
+  t.indicator, 
+  r.top_container_id,
+  CONCAT(
+    'https://archivesspace_base_url/top_containers/', 
+    t.id
+  ) AS top_container_link,
+  et.value AS top_container_type,
+  s.indicator_2 AS child_indicator,
+  ec.value AS child_container_type
+FROM archival_object AS a
+LEFT JOIN instance AS i 
+  ON a.id = i.archival_object_id
+LEFT JOIN sub_container AS s 
+  ON i.id = s.instance_id
+LEFT JOIN top_container_link_rlshp AS r 
+  ON s.id = r.sub_container_id
+LEFT JOIN top_container AS t 
+  ON t.id = r.top_container_id
+LEFT JOIN enumeration_value AS et 
+  ON t.type_id = et.id
+LEFT JOIN enumeration_value AS ec 
+  ON s.type_2_id = ec.id
+JOIN enumeration_value AS e 
+  ON e.id = a.level_id
+JOIN resource AS res 
+  ON a.root_record_id = res.id
+WHERE e.value = 'otherlevel'
+ORDER BY res.id;
 ----
