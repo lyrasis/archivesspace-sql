@@ -5,8 +5,53 @@ Replace "https://archivesspace_base_url/" as appropriate to point to staff or pu
 
 == Queries
 
+Retrieve ASpace ID, link, display string/title, authority_id, scope note, all terms in the subjcet separated by "|" for subjects that contain geographic terms, sorted by display string/title.
+
 [source,sql]
 ----
-SELECT *
-FROM subject
+SELECT s.id, CONCAT('https://archivesspace_base_url/subjects/', s.id), s.title, s.authority_id, s.scope_note, GROUP_CONCAT(t_all.term ORDER BY t_all.term SEPARATOR '|') AS all_terms
+FROM subject AS s
+JOIN subject_term AS st_all ON s.id = st_all.subject_id
+JOIN term AS t_all ON t_all.id = st_all.term_id
+WHERE s.id IN (
+  SELECT DISTINCT st.subject_id
+  FROM subject_term AS st
+  JOIN term AS t ON t.id = st.term_id
+  JOIN enumeration_value AS e ON e.id = t.term_type_id
+  WHERE e.value = 'geographic'
+)
+GROUP BY s.id, s.title, s.authority_id, s.scope_note
+ORDER BY s.title;
+----
+
+Retrieves ASpace ID, link, and subject title for any subject not linked to accessions, resources, archival objects, or agents.
+
+[source,sql]
+----
+SELECT s.id, CONCAT('https://archivesspace_base_url/subjects/', s.id) as link, s.title
+FROM subject s
+WHERE s.id NOT IN (SELECT subject_id FROM subject_rlshp)
+  AND s.id NOT IN (SELECT subject_id FROM subject_agent_subrecord_rlshp)
+  AND s.id NOT IN (SELECT subject_id FROM subject_agent_subrecord_place_rlshp)
+ORDER BY s.title;
+----
+
+Retrieve ASpace subject ID, link, subject title, subject source, authority ID, scope note, and subject type of all linked subjects in resource record ID 12345. 
+
+[source,sql]
+----
+SELECT s.id, CONCAT('https://archivesspace_base_url/subjects/', s.id) AS link, s.title, ea.value AS source, s.authority_id, s.scope_note, e.value AS subject_type 
+FROM subject as s 
+JOIN subject_term as st 
+ON s.id = st.subject_id 
+JOIN term as t 
+ON t.id = st.term_id 
+JOIN enumeration_value as e 
+ON e.id = t.term_type_id 
+LEFT JOIN enumeration_value as ea 
+ON s.source_id = ea.id
+JOIN subject_rlshp as sr 
+ON s.id = sr.subject_id 
+WHERE sr.resource_id LIKE 12345
+ORDER BY t.term; 
 ----
