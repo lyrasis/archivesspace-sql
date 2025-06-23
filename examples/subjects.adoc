@@ -5,7 +5,7 @@ Replace "https://archivesspace_base_url/" as appropriate to point to staff or pu
 
 == Queries
 
-Retrieve ASpace ID, link, display string/title, authority_id, scope note, all terms in the subjcet separated by "|" for subjects that contain geographic terms, sorted by display string/title.
+Retrieve ASpace ID, link, display string/title, authority_id, scope note, all terms in the subject separated by "|" for subjects that contain geographic terms, sorted by display string/title.
 
 [source,sql]
 ----
