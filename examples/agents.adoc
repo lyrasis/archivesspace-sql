@@ -28,7 +28,7 @@ FROM agent_family
 ----
 
 == All
-Retrieve the ASpace ID, primary/family name, agent type ('Person', 'Corporate Entity', 'Family'), and link of unpublished creators linked as creators or subjects.
+Retrieve the ASpace ID, primary/family name, agent type ('Person', 'Corporate Entity', 'Family'), and link of unpublished agents linked as creators or subjects.
 
 [source,sql]
 ----
@@ -74,7 +74,7 @@ WHERE (lar.role_id = 878 OR lar.role_id = 880)
 AND ace.publish = 0; 
 ----
 
-Retrieve the ASpace ID, primary/family name, agent type ('Person', 'Corporate Entity', 'Family'), and link of unpublished creators linked as creators or subjects.
+Retrieve the ASpace ID, primary/family name, agent type ('Person', 'Corporate Entity', 'Family'), source, authority ID, and agent link of all agents.
 
 [source,sql]
 ----
@@ -128,7 +128,8 @@ LEFT JOIN name_authority_id as ai
 ON nce.id = ai.name_corporate_entity_id;
 ----
 
-Retrieve the agent ASpace ID, primary/family name
+The following query is useful for determining how many and what kind of links an agend has. Retrieve the agent ASpace ID, agent type (Person', 'Corporate Entity','Family') sort/display name, linked accessions count, linked archival objects, linked resources, linked events, agent link, and authority/source.
+
 [source,sql]
 ----
 -- PERSON

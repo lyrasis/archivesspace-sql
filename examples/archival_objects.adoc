@@ -1,5 +1,5 @@
 = Accession Queries
-Useful queries for retrieving information about accesion records.
+Useful queries for retrieving information about archival object records.
 
 Replace "https://archivesspace_base_url/" as appropriate to point to staff or public versions of records in link output columns.
 
